@@ -1,7 +1,10 @@
 import torch
 from transformers.models.qwen3.modeling_qwen3 import apply_rotary_pos_emb
 
-from engine.paged_attention import paged_attention_gqa
+from engine.paged_attention import (
+    paged_attention_gqa_vectorized as paged_attention_gqa
+)
+from torch.profiler import record_function
 
 
 @torch.inference_mode()
@@ -58,14 +61,15 @@ def qwen_paged_decode_batch_step(
             )
 
             # Each request has its own block table
-            out = paged_attention_gqa(
-                q[i, :, 0, :],
-                pool.k_pool,
-                pool.v_pool,
-                manager.get_block_table(request_id),
-                layer=layer_idx,
-                seq_len=position + 1,
-            )
+            with record_function("TinyServe/PagedAttention"):
+                out = paged_attention_gqa(
+                    q[i, :, 0, :],
+                    pool.k_pool,
+                    pool.v_pool,
+                    manager.get_block_table(request_id),
+                    layer=layer_idx,
+                    seq_len=position + 1,
+                )
             outputs.append(out)
 
         attention_output = torch.stack(outputs, dim=0)
