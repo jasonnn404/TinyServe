@@ -109,7 +109,8 @@ with torch.inference_mode():
         # ONE batched model forward
         batch_logits = qwen_paged_decode_batch_step(
             model, batch_tokens, cache, pool, manager,
-            request_ids=request_ids, positions=positions
+            request_ids=request_ids, positions=positions,
+            attention_backend="triton",
         )
 
         print("Batch logits shape:", tuple(batch_logits.shape))

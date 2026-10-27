@@ -62,7 +62,8 @@ scheduler = Scheduler(
 
 engine = ContinuousBatchEngine(
     model, scheduler, cache, pool, manager,
-    eos_token_id=tokenizer.eos_token_id
+    eos_token_id=tokenizer.eos_token_id,
+    attention_backend="triton",
 )
 
 # Initially, only A and B arrive.

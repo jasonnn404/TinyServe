@@ -4,13 +4,14 @@ from engine.qwen_paged_batch_runner import qwen_paged_decode_batch_step
 
 
 class ContinuousBatchEngine:
-    def __init__(self, model, scheduler, cache, pool, manager, eos_token_id):
+    def __init__(self, model, scheduler, cache, pool, manager, eos_token_id, attention_backend="torch"):
         self.model = model
         self.scheduler = scheduler
         self.cache = cache
         self.pool = pool
         self.manager = manager
         self.eos_token_id = eos_token_id
+        self.attention_backend = attention_backend
 
         self.device = next(model.parameters()).device
         self.active = {}
@@ -97,7 +98,8 @@ class ContinuousBatchEngine:
         # 3. Execute one batched decoding forward.
         logits = qwen_paged_decode_batch_step(
             self.model, batch_tokens, self.cache,
-            self.pool, self.manager, request_ids, positions
+            self.pool, self.manager, request_ids, positions,
+            attention_backend=self.attention_backend
         )
 
         # 4. Record generated tokens and release finished requests.
