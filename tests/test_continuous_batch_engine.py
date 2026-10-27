@@ -63,7 +63,7 @@ scheduler = Scheduler(
 engine = ContinuousBatchEngine(
     model, scheduler, cache, pool, manager,
     eos_token_id=tokenizer.eos_token_id,
-    attention_backend="triton",
+    attention_backend="cuda_graph",
 )
 
 # Initially, only A and B arrive.
@@ -108,4 +108,9 @@ for req in requests:
     print(f"\nRequest {req.request_id}:")
     print(tokenizer.decode(req.generated_ids))
 
-print("\nContinuous Batching Integration: PASS")
+captured = engine.graph_dispatcher.captured_batch_sizes()
+
+print("Captured graphs:", captured)
+assert captured == [1, 2]
+
+print("Continuous Batching Integration: PASS")

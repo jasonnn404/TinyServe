@@ -1,6 +1,7 @@
 import torch
 
 from engine.qwen_paged_batch_runner import qwen_paged_decode_batch_step
+from engine.cuda_graph_dispatcher import CUDAGraphDispatcher
 
 
 class ContinuousBatchEngine:
@@ -17,6 +18,18 @@ class ContinuousBatchEngine:
         self.active = {}
         self.finished = {}
         self.last_decode_batch = []
+
+        self.graph_dispatcher = None
+
+        if self.attention_backend == "cuda_graph":
+            self.graph_dispatcher = CUDAGraphDispatcher(
+                model=self.model,
+                cache=self.cache,
+                pool=self.pool,
+                manager=self.manager,
+                max_seq_len=512,
+                graph_batch_sizes=(1, 2, 4),
+            )
 
     def _finish(self, req):
         self.cache.free_request(req.request_id)
@@ -96,11 +109,17 @@ class ContinuousBatchEngine:
         ]
 
         # 3. Execute one batched decoding forward.
-        logits = qwen_paged_decode_batch_step(
-            self.model, batch_tokens, self.cache,
-            self.pool, self.manager, request_ids, positions,
-            attention_backend=self.attention_backend
-        )
+        if self.attention_backend == "cuda_graph":
+            logits = self.graph_dispatcher.decode(
+                batch_tokens, request_ids, positions
+            )
+        else:
+            logits = qwen_paged_decode_batch_step(
+                self.model, batch_tokens, self.cache,
+                self.pool, self.manager,
+                request_ids, positions,
+                attention_backend=self.attention_backend,
+            )
 
         # 4. Record generated tokens and release finished requests.
         for i, request_id in enumerate(request_ids):
