@@ -108,6 +108,13 @@ class ContinuousBatchEngine:
             for r in request_ids
         ]
 
+        # print(
+        #     f"[TinyServe] GPU Decode | "
+        #     f"batch_size={len(request_ids)} | "
+        #     f"requests={request_ids}",
+        #     flush=True,
+        # )
+
         # 3. Execute one batched decoding forward.
         if self.attention_backend == "cuda_graph":
             logits = self.graph_dispatcher.decode(
