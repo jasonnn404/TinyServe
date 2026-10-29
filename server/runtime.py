@@ -1,10 +1,10 @@
-
 from concurrent.futures import Future
 from dataclasses import dataclass, field
 from queue import Empty, Queue
 from threading import Event, Thread
 from uuid import uuid4
 import traceback
+import time
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -21,7 +21,7 @@ MODEL_ID = "Qwen/Qwen3-0.6B-Base"
 DEVICE = "cuda"
 BLOCK_SIZE = 16
 TOTAL_BLOCKS = 256
-MAX_BATCH_SIZE = 4
+MAX_BATCH_SIZE = 32
 MAX_CONTEXT_LEN = 512
 
 

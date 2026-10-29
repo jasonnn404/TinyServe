@@ -8,7 +8,7 @@ from urllib.request import Request, urlopen
 URL = "http://127.0.0.1:8000/generate"
 MAX_NEW_TOKENS = 16
 
-PROMPTS = [
+BASE_PROMPTS = [
     "The capital of France is",
     "The capital of Canada is",
     "Artificial intelligence is",
@@ -18,6 +18,14 @@ PROMPTS = [
     "Python is a programming language that",
     "The largest ocean on Earth is",
 ]
+
+PROMPTS = BASE_PROMPTS + [
+    prompt + " " + "Please provide a detailed explanation. " * repeats
+    for repeats in (1, 3, 5)
+    for prompt in BASE_PROMPTS
+]
+
+assert len(PROMPTS) == 32
 
 
 def generate(prompt, barrier=None):
@@ -50,7 +58,7 @@ def main():
         references.append(result["generated_token_ids"])
         print(f"  Reference {i + 1}: PASS")
 
-    print("\nStep 2: Send 8 concurrent requests")
+    print(f"\nStep 2: Send {len(PROMPTS)} concurrent requests")
 
     barrier = Barrier(len(PROMPTS))
 

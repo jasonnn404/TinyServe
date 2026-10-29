@@ -8,7 +8,7 @@ from engine.qwen_paged_batch_runner import qwen_paged_decode_batch_step
 class CUDAGraphDispatcher:
     def __init__(
         self, model, cache, pool, manager,
-        max_seq_len=512, graph_batch_sizes=(1, 2, 4),
+        max_seq_len=512, graph_batch_sizes=(1, 2, 4, 8, 16, 32),
     ):
         self.model = model
         self.cache = cache
